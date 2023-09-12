@@ -1,0 +1,15 @@
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/bin/Debug/net7.0/Typing speed test
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/bin/Debug/net7.0/Typing speed test.deps.json
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/bin/Debug/net7.0/Typing speed test.runtimeconfig.json
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/bin/Debug/net7.0/Typing speed test.dll
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/bin/Debug/net7.0/Typing speed test.pdb
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/obj/Debug/net7.0/Typing speed test.csproj.AssemblyReference.cache
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/obj/Debug/net7.0/Typing speed test.GeneratedMSBuildEditorConfig.editorconfig
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/obj/Debug/net7.0/Typing speed test.AssemblyInfoInputs.cache
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/obj/Debug/net7.0/Typing speed test.AssemblyInfo.cs
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/obj/Debug/net7.0/Typing speed test.csproj.CoreCompileInputs.cache
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/obj/Debug/net7.0/Typing speed test.dll
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/obj/Debug/net7.0/refint/Typing speed test.dll
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/obj/Debug/net7.0/Typing speed test.pdb
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/obj/Debug/net7.0/Typing speed test.genruntimeconfig.cache
+/Users/finleycrowther/RiderProjects/Typing speed test/Typing speed test/obj/Debug/net7.0/ref/Typing speed test.dll

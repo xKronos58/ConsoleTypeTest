@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Typing speed test", "Typing speed test\Typing speed test.csproj", "{71EBA675-C19C-4061-8CC5-BFC1A881C2E5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{71EBA675-C19C-4061-8CC5-BFC1A881C2E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71EBA675-C19C-4061-8CC5-BFC1A881C2E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71EBA675-C19C-4061-8CC5-BFC1A881C2E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71EBA675-C19C-4061-8CC5-BFC1A881C2E5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
