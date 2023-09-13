@@ -20,7 +20,11 @@ public class Program
         Console.WriteLine("Please input the type of test (1 -> 3)");
         if(!int.TryParse(Console.ReadLine(), out var mode))
             throw new FormatException($"{mode} is not a valid integer");
-
+        
+        //Gives the user a countdown
+        Console.Clear();
+        Clock.Countdown();
+        
         //Starts the timer and runs logic
         Console.WriteLine("GO!!");
         var main = Task.Factory.StartNew(() => Logic.Run());
@@ -98,6 +102,18 @@ public class Clock
         });
         return true;
     }
+
+    /// <summary>
+    /// Gives a countdown from 3
+    /// </summary>
+    public static void Countdown()
+    {
+        for(var i = 3; i > 0; i--)
+        {
+            Console.WriteLine(i);
+            Thread.Sleep(1000);
+        }
+    }
 }
 
 public class Logic
@@ -136,7 +152,7 @@ public class CheckInput
     
     /// <summary>
     /// Takes the Two List[string[]] and compares them to each other to get the WPM
-    /// divides it by the mode to get the correct WPM
+    /// multiples it by the mode to get the correct WPM
     /// </summary>
     /// <returns>int - Speed</returns>
     public static int Wpm(int mode)
@@ -145,7 +161,7 @@ public class CheckInput
             from answer in Logic.answers 
             from input in answer 
             where word == input select word).Count() 
-           / mode switch { 1 => 4, 2 => 2, 3 => 1, _ => 2};
+           * mode switch { 1 => 4, 2 => 2, 3 => 1, _ => 2};
 }
 
 public class DisplayResults
@@ -188,11 +204,3 @@ class ThreadTesting
         }
     }
 }
-
-/*
- *  Class 1 Generate the random words
- *  Class 2 Run a constant clock
- *  Class 3 Check the input
- *  Class 4 Display the results
- *  Program Run the program
- */
