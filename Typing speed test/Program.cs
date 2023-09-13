@@ -1,7 +1,4 @@
-﻿using System.Data;
-using System.Diagnostics;
-using System.Net;
-using System.Threading.Channels;
+﻿using System.Net;
 using Console = System.Console;
 using Task = System.Threading.Tasks.Task;
 using Thread = System.Threading.Thread;
@@ -15,26 +12,33 @@ public class Program
         if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "words.txt"))
             GenerateWords.DownloadFile();
 
+        //Checks to make sure the file can be found after the download
+        if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "words.txt"))
+            throw new FileNotFoundException("File not found");
+        
         //Takes in the mode of the test
         Console.WriteLine("Please input the type of test (1 -> 3)");
-        if(!int.TryParse(Console.ReadLine(), out var o))
-            throw new InvalidExpressionException($"{o} is not a valid integer");
+        if(!int.TryParse(Console.ReadLine(), out var mode))
+            throw new FormatException($"{mode} is not a valid integer");
 
         //Starts the timer and runs logic
         Console.WriteLine("GO!!");
         var main = Task.Factory.StartNew(() => Logic.Run());
-        Finished = Task.Factory.StartNew(() => Clock.Time(o)).Result;
+        Finished = Task.Factory.StartNew(() => Clock.Time(mode)).Result;
 
         //  Outputs the basic results
         Console.Clear();
         Console.WriteLine("Finished...");
-        Console.WriteLine($"You got {CheckInput.Wpm(o)} words per minute");
+        Console.WriteLine($"You got {CheckInput.Wpm(mode)} words per minute");
         
     }
 }
 
 public class GenerateWords
 {
+    /// <summary>
+    /// If the word file is missing it downloads it from the github repo
+    /// </summary>
     public static void DownloadFile()
         => new WebClient().DownloadFile(
             "https://raw.githubusercontent.com/xKronos58/ConsoleTypeTest/main/Typing%20speed%20test/Words.txt?token=GHSAT0AAAAAACG7JEZZ4LCU6EWFHKS56IM4ZIBMW3A", 
@@ -61,17 +65,19 @@ public class GenerateWords
     /// <returns>String[] of single words</returns>
     /// <exception cref="FileNotFoundException">FileNotFound</exception>
     private static string[] CacheWords()
-        => File.Exists(AppDomain.CurrentDomain.BaseDirectory + "words.txt") ?
-            File.ReadAllLines(AppDomain.CurrentDomain.BaseDirectory + "words.txt") :
+        => File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Words.txt")) ?
+            File.ReadAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Words.txt")) :
             throw new FileNotFoundException(AppDomain.CurrentDomain.BaseDirectory + "words.txt not found");
-    
+
+
+    static Random random = new();
     /// <summary>
     /// Takes in the cached word list and then outputs a random word from that list
     /// </summary>
     /// <param name="list">String[] of single words</param>
     /// <returns>string</returns>
     private static string GenerateWord(IReadOnlyList<string> list)
-        => list[new Random().Next(0, list.Count)];
+        => list[random.Next(0, list.Count)];
 }
 
 public class Clock
@@ -119,7 +125,7 @@ public class CheckInput
 {
     public static string[]? Input()
     {
-        // I want to do it via Console.readKey for an accurate (In color) display,
+        // TODO: I want to do it via Console.readKey for an accurate (In color) display,
         // as well as to allow for per word counting rather than per line
         // Should also allow for constant display of the timer
         
