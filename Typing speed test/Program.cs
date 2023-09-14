@@ -29,11 +29,14 @@ public class Program
         Console.WriteLine("GO!!");
         var main = Task.Factory.StartNew(() => Logic.Run());
         Finished = Task.Factory.StartNew(() => Clock.Time(mode)).Result;
-
+        Task.WaitAll(main);
+        
         //  Outputs the basic results
         Console.Clear();
-        Console.WriteLine("Finished...");
-        Console.WriteLine($"You got {CheckInput.Wpm(mode)} words per minute");
+        Console.WriteLine("Times up!!...");
+        int speed = CheckInput.Wpm(mode);
+        string aboveOrBelow = speed > 40 ? "above" : "below";
+        Console.WriteLine($"You got {speed} (CPM : {0 /*CheckInput.Cpm(mode)*/}) words per minute that is {aboveOrBelow}");
         
     }
 }
@@ -130,8 +133,8 @@ public class Logic
         while (!Program.Finished)
         {
             lines.Add(GenerateWords.Build());
-            Console.WriteLine(string.Join(' ', lines[i]));
-            answers.Add(CheckInput.Input()!);
+            Console.WriteLine("\n" + string.Join(' ', lines[i]));
+            answers.Add(CheckInput.InputLine()!);
             i++;
         }
     }
@@ -139,15 +142,52 @@ public class Logic
 
 public class CheckInput
 {
-    public static string[]? Input()
+    public static string?[] InputLine()
+    {
+        var end = new string?[12];
+        var wordPos = 0;
+        while (!Program.Finished && wordPos < 12)
+        {
+            end[wordPos] = InputWord();
+            wordPos++;
+        }
+
+        Console.WriteLine("Line finished...");
+        return end;
+    }
+    private static string? InputWord()
     {
         // TODO: I want to do it via Console.readKey for an accurate (In color) display,
         // as well as to allow for per word counting rather than per line
         // Should also allow for constant display of the timer
         
+        var current = new ConsoleKeyInfo();
+        var final = string.Empty;
+
+        while (current.Key != ConsoleKey.Spacebar)
+        {
+            if (current.Key == ConsoleKey.Backspace)
+            {
+                final = final[..^1];
+                Console.Write("\b\b");
+            }
+            current = Console.ReadKey();
+            final += current.KeyChar;
+        }
         
-        
-        return Console.ReadLine()?.Split(' ')!;
+        return final[..^1];
+        /*  Pseudo code 
+         *
+         * While(something)
+         *  add to a string array, so maybe i phase out the use of the list
+         *  Change display - This is where the color comes in
+         *
+         *
+         *  Space should submit the word, and count how many words have been typed then clear and increment to the next
+         *  line once it has reached 12
+         * 
+         */
+
     }
     
     /// <summary>
@@ -162,6 +202,17 @@ public class CheckInput
             from input in answer 
             where word == input select word).Count() 
            * mode switch { 1 => 4, 2 => 2, 3 => 1, _ => 2};
+
+    // public static int Cpm(int mode)
+    //     => (from line in Logic.lines
+    //         from word in line
+    //         from chara in word
+    //         from answer in Logic.answers
+    //         from input in answer
+    //         from chara2 in input
+    //         where chara == chara2
+    //         select chara).Count() 
+    //        * mode switch { 1 => 4, 2 => 2, 3 => 1, _ => 2 };
 }
 
 public class DisplayResults
