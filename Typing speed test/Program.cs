@@ -32,11 +32,11 @@ public abstract class Program
         //  Outputs the basic results
         // Console.Clear();
         Console.WriteLine("Times up!!...");
-        int speed = SpeedAndAccuracy.Wpm(mode);
-        string aboveOrBelow = speed == 40 ? "At" : speed > 40 ? "Above" : "Blow";
+        var speed = SpeedAndAccuracy.Wpm(mode);
+        var aboveOrBelow = speed == 40 ? "At" : speed > 40 ? "Above" : "Blow";
         Console.WriteLine($"You got {speed} (CPM : {0 /*CheckInput.Cpm(mode)*/})" +
                           $" words per minute that is {aboveOrBelow} Average" +
-                          $"\nWith an accuracy of {SpeedAndAccuracy.Accuracy()}% with {SpeedAndAccuracy.Errors()}");
+                          $"\nWith an accuracy of {SpeedAndAccuracy.Accuracy()}%");
         
     }
 }
@@ -51,7 +51,8 @@ public abstract class GenerateWords
         var response = await new HttpClient().GetAsync("https://raw.githubusercontent.com/xKronos58/ConsoleTypeTest/main/Typing%20speed%20test/Words.txt?token=GHSAT0AAAAAACG7JEZZ4LCU6EWFHKS56IM4ZIBMW3A");
 
         if (response.IsSuccessStatusCode)
-            await File.WriteAllBytesAsync(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Words.txt"), await response.Content.ReadAsByteArrayAsync());
+            await File.WriteAllBytesAsync(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Words.txt"), 
+                await response.Content.ReadAsByteArrayAsync());
         else
             throw new HttpRequestException($"Failed to download file. Status code: {response.StatusCode}");
     }
@@ -192,40 +193,42 @@ public abstract class CheckInput
 
 public abstract class SpeedAndAccuracy
 {
-        
+
     /// <summary>
     /// Takes the Two List[string[]] and compares them to each other to get the WPM
     /// multiples it by the mode to get the correct WPM
     /// </summary>
     /// <returns>int (Speed)</returns>
     public static int Wpm(int mode)
-        => (from line in Logic.Lines 
-               from word in line 
-               from answer in Logic.Answers 
-               from input in answer 
-               where word == input select word).Count() 
-           * mode switch { 1 => 4, 2 => 2, 3 => 1, _ => 2};
-
-
-    private static readonly int TotalWordsTyped = Logic.Answers.Sum(l => l.Length);
+        => (from line in Logic.Lines
+               from word in line
+               from answer in Logic.Answers
+               from input in answer
+               where word == input
+               select word).Count()
+           * mode switch { 1 => 4, 2 => 2, 3 => 1, _ => 2 };
+    
+    private static readonly int TotalWordsTyped = Logic.Answers.Sum(l => l.Length); 
+    //Need to check if L is not null should be able to do this with a where statement.
     
     // Error rate as percentage = (total - errors) * 100
     public static double Accuracy()
         => (double)(TotalWordsTyped - Errors()) / TotalWordsTyped * 100;
 
-    public static int Errors()
+    private static int Errors()
     {
         // TODO: Effectively count how many words that were typed in each line, this should be done then
         // TODO: parsed inside the initial for loop as the array length is set
         
         var errors = 0;
+        Console.WriteLine("You Wrote - Correct Answer");
         for(var i = 0; i < Logic.Answers.Count; i++)
-        for(var j = 0; j < Logic.Answers[i].Length; j++)
-            if (Logic.Lines[i][j] != Logic.Answers[i][j])
-            {
-                errors++;
-                Console.WriteLine(Logic.Answers[i][j] + " - " + Logic.Lines[i][j]);
-            }
+            for(var j = 0; j < Logic.Answers[i].Length; j++)
+                if (Logic.Lines[i][j] != Logic.Answers[i][j] && Logic.Answers[i][j] != string.Empty)
+                {
+                    errors++;
+                    Console.WriteLine(Logic.Answers[i][j] + " - " + Logic.Lines[i][j]);
+                }
         return errors;
     }
     
