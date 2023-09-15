@@ -1,6 +1,4 @@
-﻿using System.Net;
-
-namespace Typing_speed_test;
+﻿namespace Typing_speed_test;
 
 public abstract class Program
 {
@@ -14,12 +12,12 @@ public abstract class Program
 
         //Checks to make sure the file can be found after the download
         if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "words.txt"))
-            throw new FileNotFoundException("File not found");
+            throw new FileNotFoundException($"File not found, please run the program again to download the file");
         
         //Takes in the mode of the test
         Console.WriteLine("Please input the type of test (1 -> 3)");
-        if(!int.TryParse(Console.ReadLine(), out var mode))
-            throw new FormatException($"{mode} is not a valid integer");
+        if(!int.TryParse(Console.ReadLine(), out var mode) && mode is > 1 and < 3)
+            throw new FormatException($"{mode} is not a valid integer please input a number between 1 and 3");
         
         //Gives the user a countdown
         Console.Clear();
@@ -34,9 +32,11 @@ public abstract class Program
         //  Outputs the basic results
         // Console.Clear();
         Console.WriteLine("Times up!!...");
-        int speed = CheckInput.Wpm(mode);
+        int speed = SpeedAndAccuracy.Wpm(mode);
         string aboveOrBelow = speed == 40 ? "At" : speed > 40 ? "Above" : "Blow";
-        Console.WriteLine($"You got {speed} (CPM : {0 /*CheckInput.Cpm(mode)*/}) words per minute that is {aboveOrBelow} Average\nWith an accuracy of {CheckInput.Accuracy()}% with {CheckInput.Errors()}");
+        Console.WriteLine($"You got {speed} (CPM : {0 /*CheckInput.Cpm(mode)*/})" +
+                          $" words per minute that is {aboveOrBelow} Average" +
+                          $"\nWith an accuracy of {SpeedAndAccuracy.Accuracy()}% with {SpeedAndAccuracy.Errors()}");
         
     }
 }
@@ -78,7 +78,8 @@ public abstract class GenerateWords
     private static string[] CacheWords()
         => File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Words.txt")) ?
             File.ReadAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Words.txt")) :
-            throw new FileNotFoundException(AppDomain.CurrentDomain.BaseDirectory + "words.txt not found");
+            throw new FileNotFoundException(AppDomain.CurrentDomain.BaseDirectory 
+                                            + "words.txt not found please rerun the program to download the word list");
 
 
     private static readonly Random Random = new();
@@ -100,18 +101,13 @@ public abstract class Clock
     /// <returns>true</returns>
     public static bool Time(int mode)
     {
-        Thread.Sleep(mode switch
-        {
-            1 => 15000, // 15 seconds
-            2 => 30000, // 30 seconds
-            3 => 60000, // 1 minute
-            _ => 30000, // Defaults to 30 seconds if the input is invalid
-        });
+        var modes = new[] { 15000 /* 15 Seconds */, 30000 /* 30 Seconds */, 60000 /* 60 Seconds */ };
+        Thread.Sleep(modes[mode - 1]);
         return true;
     }
 
     /// <summary>
-    /// Gives a countdown from 3
+    /// Gives a countdown from 3 seconds
     /// </summary>
     public static void Countdown()
     {
@@ -192,7 +188,11 @@ public abstract class CheckInput
         
         return final[..^1];
     }
-    
+}
+
+public abstract class SpeedAndAccuracy
+{
+        
     /// <summary>
     /// Takes the Two List[string[]] and compares them to each other to get the WPM
     /// multiples it by the mode to get the correct WPM
@@ -210,8 +210,8 @@ public abstract class CheckInput
     private static readonly int TotalWordsTyped = Logic.Answers.Sum(l => l.Length);
     
     // Error rate as percentage = (total - errors) * 100
-    public static int Accuracy()
-        => (TotalWordsTyped - Errors()) / TotalWordsTyped * 100;
+    public static double Accuracy()
+        => (double)(TotalWordsTyped - Errors()) / TotalWordsTyped * 100;
 
     public static int Errors()
     {
