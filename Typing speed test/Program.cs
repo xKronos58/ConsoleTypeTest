@@ -1,16 +1,16 @@
 ﻿using System.Net;
-using Console = System.Console;
-using Task = System.Threading.Tasks.Task;
-using Thread = System.Threading.Thread;
 
-public class Program
+namespace Typing_speed_test;
+
+public abstract class Program
 {
-    public static bool Finished = false;
-    public static void Main()
+    public static bool Finished;
+    
+    public static async Task Main()
     {
         //Runs a test to see if the file exists
         if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "words.txt"))
-            GenerateWords.DownloadFile();
+            await GenerateWords.DownloadFileAsync();
 
         //Checks to make sure the file can be found after the download
         if (!File.Exists(AppDomain.CurrentDomain.BaseDirectory + "words.txt"))
@@ -27,35 +27,39 @@ public class Program
         
         //Starts the timer and runs logic
         Console.WriteLine("GO!!");
-        var main = Task.Factory.StartNew(() => Logic.Run());
+        var main = Task.Factory.StartNew(Logic.Run);
         Finished = Task.Factory.StartNew(() => Clock.Time(mode)).Result;
         Task.WaitAll(main);
         
         //  Outputs the basic results
-        Console.Clear();
+        // Console.Clear();
         Console.WriteLine("Times up!!...");
         int speed = CheckInput.Wpm(mode);
-        string aboveOrBelow = speed > 40 ? "above" : "below";
-        Console.WriteLine($"You got {speed} (CPM : {0 /*CheckInput.Cpm(mode)*/}) words per minute that is {aboveOrBelow}");
+        string aboveOrBelow = speed == 40 ? "At" : speed > 40 ? "Above" : "Blow";
+        Console.WriteLine($"You got {speed} (CPM : {0 /*CheckInput.Cpm(mode)*/}) words per minute that is {aboveOrBelow} Average\nWith an accuracy of {CheckInput.Accuracy()}% with {CheckInput.Errors()}");
         
     }
 }
 
-public class GenerateWords
+public abstract class GenerateWords
 {
     /// <summary>
     /// If the word file is missing it downloads it from the github repo
     /// </summary>
-    public static void DownloadFile()
-        => new WebClient().DownloadFile(
-            "https://raw.githubusercontent.com/xKronos58/ConsoleTypeTest/main/Typing%20speed%20test/Words.txt?token=GHSAT0AAAAAACG7JEZZ4LCU6EWFHKS56IM4ZIBMW3A", 
-            /*        TODO: Link needs to be fixed!         */
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Words.txt"));
+    public static async Task DownloadFileAsync()
+    {
+        var response = await new HttpClient().GetAsync("https://raw.githubusercontent.com/xKronos58/ConsoleTypeTest/main/Typing%20speed%20test/Words.txt?token=GHSAT0AAAAAACG7JEZZ4LCU6EWFHKS56IM4ZIBMW3A");
+
+        if (response.IsSuccessStatusCode)
+            await File.WriteAllBytesAsync(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Words.txt"), await response.Content.ReadAsByteArrayAsync());
+        else
+            throw new HttpRequestException($"Failed to download file. Status code: {response.StatusCode}");
+    }
     
     /// <summary>
     /// Builds the sentence to be typed
     /// </summary>
-    /// <returns></returns>
+    /// <returns>String[12]</returns>
     public static string[] Build()
     {
         var words = new string[12];
@@ -77,17 +81,17 @@ public class GenerateWords
             throw new FileNotFoundException(AppDomain.CurrentDomain.BaseDirectory + "words.txt not found");
 
 
-    static Random random = new();
+    private static readonly Random Random = new();
     /// <summary>
     /// Takes in the cached word list and then outputs a random word from that list
     /// </summary>
     /// <param name="list">String[] of single words</param>
     /// <returns>string</returns>
     private static string GenerateWord(IReadOnlyList<string> list)
-        => list[random.Next(0, list.Count)];
+        => list[Random.Next(0, list.Count)];
 }
 
-public class Clock
+public abstract class Clock
 {
     /// <summary>
     /// Takes the mode and runs the timer that returns true when finished
@@ -119,10 +123,10 @@ public class Clock
     }
 }
 
-public class Logic
+public abstract class Logic
 {
-    public static List<string[]> lines = new();
-    public static List<string[]> answers = new();
+    public static readonly List<string[]> Lines = new();
+    public static readonly List<string[]> Answers = new();
     
     /// <summary>
     /// Pulls all of the logic together on runs until the timer is finished 
@@ -132,16 +136,23 @@ public class Logic
         var i = 0;
         while (!Program.Finished)
         {
-            lines.Add(GenerateWords.Build());
-            Console.WriteLine("\n" + string.Join(' ', lines[i]));
-            answers.Add(CheckInput.InputLine()!);
+            Lines.Add(GenerateWords.Build());
+            Console.WriteLine("\n" + string.Join(' ', Lines[i]));
+            Answers.Add(CheckInput.InputLine()!);
             i++;
         }
     }
 }
 
-public class CheckInput
+/// <summary>
+/// All of the methods used to check and handle input
+/// </summary>
+public abstract class CheckInput
 {
+    /// <summary>
+    /// This method uses input word to get a whole line then returns what has been typed.
+    /// </summary>
+    /// <returns>String?[12]</returns>
     public static string?[] InputLine()
     {
         var end = new string?[12];
@@ -155,20 +166,24 @@ public class CheckInput
         Console.WriteLine("Line finished...");
         return end;
     }
-    private static string? InputWord()
+    
+    /// <summary>
+    /// Takes single word input from the console. 
+    /// </summary>
+    /// <returns>String?</returns>
+    private static string InputWord()
     {
-        // TODO: I want to do it via Console.readKey for an accurate (In color) display,
-        // as well as to allow for per word counting rather than per line
-        // Should also allow for constant display of the timer
+        // Takes keyboard input individually, this allows for the word count to be updated in real time.
+        // If the key is a space it submits the word.
         
         var current = new ConsoleKeyInfo();
         var final = string.Empty;
 
-        while (current.Key != ConsoleKey.Spacebar)
+        while (current.Key != ConsoleKey.Spacebar) 
         {
             if (current.Key == ConsoleKey.Backspace)
             {
-                final = final[..^1];
+                final = final[..^1];    //TODO: Handle modify previously submitted word
                 Console.Write("\b\b");
             }
             current = Console.ReadKey();
@@ -176,33 +191,46 @@ public class CheckInput
         }
         
         return final[..^1];
-        /*  Pseudo code 
-         *
-         * While(something)
-         *  add to a string array, so maybe i phase out the use of the list
-         *  Change display - This is where the color comes in
-         *
-         *
-         *  Space should submit the word, and count how many words have been typed then clear and increment to the next
-         *  line once it has reached 12
-         * 
-         */
-
     }
     
     /// <summary>
     /// Takes the Two List[string[]] and compares them to each other to get the WPM
     /// multiples it by the mode to get the correct WPM
     /// </summary>
-    /// <returns>int - Speed</returns>
+    /// <returns>int (Speed)</returns>
     public static int Wpm(int mode)
-        => (from line in Logic.lines 
-            from word in line 
-            from answer in Logic.answers 
-            from input in answer 
-            where word == input select word).Count() 
+        => (from line in Logic.Lines 
+               from word in line 
+               from answer in Logic.Answers 
+               from input in answer 
+               where word == input select word).Count() 
            * mode switch { 1 => 4, 2 => 2, 3 => 1, _ => 2};
 
+
+    private static readonly int TotalWordsTyped = Logic.Answers.Sum(l => l.Length);
+    
+    // Error rate as percentage = (total - errors) * 100
+    public static int Accuracy()
+        => (TotalWordsTyped - Errors()) / TotalWordsTyped * 100;
+
+    public static int Errors()
+    {
+        // TODO: Effectively count how many words that were typed in each line, this should be done then
+        // TODO: parsed inside the initial for loop as the array length is set
+        
+        var errors = 0;
+        for(var i = 0; i < Logic.Answers.Count; i++)
+        for(var j = 0; j < Logic.Answers[i].Length; j++)
+            if (Logic.Lines[i][j] != Logic.Answers[i][j])
+            {
+                errors++;
+                Console.WriteLine(Logic.Answers[i][j] + " - " + Logic.Lines[i][j]);
+            }
+        return errors;
+    }
+    
+    // To be implemented later but is the base for the CPM
+    
     // public static int Cpm(int mode)
     //     => (from line in Logic.lines
     //         from word in line
@@ -213,45 +241,4 @@ public class CheckInput
     //         where chara == chara2
     //         select chara).Count() 
     //        * mode switch { 1 => 4, 2 => 2, 3 => 1, _ => 2 };
-}
-
-public class DisplayResults
-{
-    
-}
-
-
-/// <summary>
-/// Obsolete code used for testing and reference
-/// </summary>
-[Obsolete]
-class ThreadTesting
-{
-    /// <summary>
-    /// Obsolete code used for testing and reference
-    /// </summary>
-    [Obsolete]
-    public static void ThreadTest(string[] args)
-    {
-        Task task1 = Task.Factory.StartNew(() => doStuff("Task1"));
-        Task task2 = Task.Factory.StartNew(() => doStuff("Test"));
-        Task task3 = Task.Factory.StartNew(() => doStuff("Task3"));
-        Task.WaitAll(task1, task2, task3);
-
-        Console.WriteLine("All tasks are completed");
-        Console.ReadLine();
-    }
-
-    /// <summary>
-    /// Obsolete code used for testing and reference
-    /// </summary>
-    [Obsolete]
-    static void doStuff(string strName)
-    {
-        for (int i = 1; i <= 3; i++)
-        {
-            Console.WriteLine(strName + " " + i.ToString());
-            Thread.Yield();
-        }
-    }
 }
