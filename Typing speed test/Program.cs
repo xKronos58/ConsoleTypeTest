@@ -82,8 +82,8 @@ public abstract class GenerateWords
             throw new FileNotFoundException(AppDomain.CurrentDomain.BaseDirectory 
                                             + "words.txt not found please rerun the program to download the word list");
 
-
     private static readonly Random Random = new();
+    
     /// <summary>
     /// Takes in the cached word list and then outputs a random word from that list
     /// </summary>
@@ -150,14 +150,15 @@ public abstract class CheckInput
     /// This method uses input word to get a whole line then returns what has been typed.
     /// </summary>
     /// <returns>String?[12]</returns>
+    private static int _wordPos;
     public static string?[] InputLine()
     {
         var end = new string?[12];
-        var wordPos = 0;
-        while (!Program.Finished && wordPos < 12)
+        _wordPos = 0;
+        while (!Program.Finished && _wordPos < 12)
         {
-            end[wordPos] = InputWord();
-            wordPos++;
+            end[_wordPos] = InputWord(_wordPos, end);
+            _wordPos++;
         }
 
         Console.WriteLine("Line finished...");
@@ -168,7 +169,7 @@ public abstract class CheckInput
     /// Takes single word input from the console. 
     /// </summary>
     /// <returns>String?</returns>
-    private static string InputWord()
+    private static string InputWord(int wordPos, string?[] end)
     {
         // Takes keyboard input individually, this allows for the word count to be updated in real time.
         // If the key is a space it submits the word.
@@ -176,18 +177,35 @@ public abstract class CheckInput
         var current = new ConsoleKeyInfo();
         var final = string.Empty;
 
-        while (current.Key != ConsoleKey.Spacebar) 
+        while (current.Key != ConsoleKey.Spacebar)
         {
             if (current.Key == ConsoleKey.Backspace)
-            {
-                final = final[..^1];    //TODO: Handle modify previously submitted word
-                Console.Write("\b\b");
-            }
+                final = HandleBackspace(final, wordPos, end);
             current = Console.ReadKey();
             final += current.KeyChar;
         }
         
         return final[..^1];
+    }
+
+    /// <summary>
+    /// If the user typed a back space, checks if the word is empty,
+    /// if so starts to modify the last word, else removes the last letter typed
+    /// </summary>
+    /// <param name="final">String, Current word</param>
+    /// <param name="wordPos">Int, Position in sentence</param>
+    /// <param name="end">String[], Sentence</param>
+    /// <returns>String, current word</returns>
+    private static string HandleBackspace(string final, int wordPos, IReadOnlyList<string?> end)
+    {
+        Console.Write("\b\b");
+        return final.Any().Equals(null) ? HandlePreviousWordModification(wordPos, end) : final[..^1];
+    }
+
+    private static string HandlePreviousWordModification(int wordPos, IReadOnlyList<string?> end)
+    {
+        wordPos--;
+        return end[wordPos]![..^1];     //TODO: Modification still needed
     }
 }
 
@@ -217,14 +235,11 @@ public abstract class SpeedAndAccuracy
 
     private static int Errors()
     {
-        // TODO: Effectively count how many words that were typed in each line, this should be done then
-        // TODO: parsed inside the initial for loop as the array length is set
-        
         var errors = 0;
-        Console.WriteLine("You Wrote - Correct Answer");
+        Console.WriteLine("(You Wrote) - (Correct Answer)");
         for(var i = 0; i < Logic.Answers.Count; i++)
             for(var j = 0; j < Logic.Answers[i].Length; j++)
-                if (Logic.Lines[i][j] != Logic.Answers[i][j] && Logic.Answers[i][j] != string.Empty)
+                if (Logic.Lines[i][j] != Logic.Answers[i][j] && Logic.Answers[i][j] != String.Empty)
                 {
                     errors++;
                     Console.WriteLine(Logic.Answers[i][j] + " - " + Logic.Lines[i][j]);
