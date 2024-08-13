@@ -48,7 +48,7 @@ public abstract class GenerateWords
     /// </summary>
     public static async Task DownloadFileAsync()
     {
-        var response = await new HttpClient().GetAsync("https://raw.githubusercontent.com/xKronos58/ConsoleTypeTest/main/Typing%20speed%20test/Words.txt?token=GHSAT0AAAAAACG7JEZZ4LCU6EWFHKS56IM4ZIBMW3A");
+        var response = await new HttpClient().GetAsync("https://raw.githubusercontent.com/xKronos58/ConsoleTypeTest/main/Typing%20speed%20test/Words.txt");
 
         if (response.IsSuccessStatusCode)
             await File.WriteAllBytesAsync(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Words.txt"), 
